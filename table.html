@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRODUCTOS</title>
+    <meta name="title" content="PRODUCTOS">
+    <meta name="description" content="Consumo de microservicios por NinYuri">
+    <link rel="icon" href="assets/images/page_icon.ico">
+    <link rel="stylesheet" href="assets/css/ctable.css">
+
+</head>
+
+<body>
+    <div class="circle"></div>
+    <div class="circle"></div>  
+    <div class="circle"></div>  
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>    
+    
+    <div class="wrapper">
+        <div class="title">PRODUCTOS</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Producto</th>
+                    <th>Precio</th>
+                    <th>Disponible</th>
+                    <th>Fecha de Creación</th>
+                    <th>Fecha de Actualización</th>
+                </tr>
+            </thead> 
+            <tbody id="produc-table-body">
+
+            </tbody>       
+        </table>
+
+        <div class="pagination">
+            <button id="prev-page" disabled><span class="box">Anterior</span></button>
+            <span id="current-page">Página 1</span>
+            <button id="next-page"><span class="box">Siguiente</span></button>
+        </div>
+    </div>
+
+    <script>
+        const fetchProducts = async (page = 1) => {
+            const apiUrl = `http://localhost:3000/api/products/?page=${page}`;
+            try {
+                // Realizar solicitud al endpoint
+                const response = await fetch(apiUrl);
+
+                if(!response.ok) {
+                    throw new Error(`HTTP error: ${response.status}`);
+                }
+
+                // Extraer data y meta del backend
+                const { data: products, meta } = await response.json();
+                updateTable(products);
+                updatePagination(meta.page, meta.lastPage);                
+            } catch(error) {
+                console.error('Error fetching products:', error);
+            }
+        };
+
+        const updateTable = (products) => {
+            const tableBody = document.getElementById('produc-table-body');
+            tableBody.innerHTML = ''; // Limpiar filas existentes
+
+            products.forEach(product => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${product.id}</td>
+                    <td>${product.name}</td>
+                    <td>$${product.price.toFixed(2)}</td>
+                    <td>${product.available ? 'Sí' : 'No'}</td>
+                    <td>${new Date(product.createdAt).toLocaleDateString()}</td>
+                    <td>${new Date(product.updatedAt).toLocaleDateString()}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        };
+
+        const updatePagination = (currentPage, lastPage) => {
+            const prevButton = document.getElementById('prev-page');
+            const nextButton = document.getElementById('next-page');
+            const currentPageSpan = document.getElementById('current-page');
+
+            // Actualizar estado de los botones
+            prevButton.disabled = currentPage === 1;
+            nextButton.disabled = currentPage === lastPage;
+
+            // Actualizar el texto de la página actual
+            currentPageSpan.textContent = `Página ${currentPage} de ${lastPage}`;
+        };
+
+        // Agregar funcionalidad a los botones
+        document.getElementById('prev-page').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                fetchProducts(currentPage, itemsPerPage);
+            }
+        });
+
+        document.getElementById('next-page').addEventListener('click', () => {
+            currentPage++;
+            fetchProducts(currentPage, itemsPerPage);
+        });
+
+        // Variables de estado
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        // Cargar productos de la primera página al inicio
+        fetchProducts(currentPage, itemsPerPage);
+    </script>
+</body>
+
+</html>
